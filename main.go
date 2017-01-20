@@ -28,11 +28,11 @@ var (
 	responseChance  int
 	responseTimeout int
 
-	twitterConsumerKey       string
-	twitterConsumerSecret    string
-	twitterAccessToken       string
-	twitterAccessTokenSecret string
-	twitterClient            *Twitter
+	twitterConsumerKey    string
+	twitterConsumerSecret string
+	//twitterAccessToken       string
+	//twitterAccessTokenSecret string
+	//twitterClient            *Twitter
 
 	markovChain *Chain
 )
@@ -62,8 +62,8 @@ func main() {
 
 	flag.StringVar(&twitterConsumerKey, "twitterConsumerKey", "", "Twitter API key")
 	flag.StringVar(&twitterConsumerSecret, "twitterConsumerSecret", "", "Twitter API key secret")
-	flag.StringVar(&twitterAccessToken, "twitterAccessToken", "", "Twitter access token")
-	flag.StringVar(&twitterAccessTokenSecret, "twitterAccessTokenSecret", "", "Twitter access token secret")
+	//flag.StringVar(&twitterAccessToken, "twitterAccessToken", "", "Twitter access token")
+	//flag.StringVar(&twitterAccessTokenSecret, "twitterAccessTokenSecret", "", "Twitter access token secret")
 
 	var importDir = flag.String("importDir", "", "The directory of a Slack export")
 	var importChan = flag.String("importChan", "", "Optional channel to limit the import to")
@@ -95,18 +95,18 @@ func main() {
 	}
 
 	// Optionally create the twitter bridge
-	if twitterConsumerKey != "" && twitterConsumerSecret != "" && twitterAccessToken != "" && twitterAccessTokenSecret != "" {
-		twitterClient = NewTwitter(twitterConsumerKey, twitterConsumerSecret, twitterAccessToken, twitterAccessTokenSecret)
+	//if twitterConsumerKey != "" && twitterConsumerSecret != "" && twitterAccessToken != "" && twitterAccessTokenSecret != "" {
+	//	twitterClient = NewTwitter(twitterConsumerKey, twitterConsumerSecret, twitterAccessToken, twitterAccessTokenSecret)
 
-		user, err := twitterClient.GetMe()
-		if err != nil {
-			log.Fatal(err)
-		}
+	//	user, err := twitterClient.GetMe()
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
 
-		log.Printf("Connected to Twitter as: %s", user.ScreenName)
-	} else {
-		log.Printf("Not enabling twitter support")
-	}
+	//	log.Printf("Connected to Twitter as: %s", user.ScreenName)
+	//} else {
+	//	log.Printf("Not enabling twitter support")
+	//}
 
 	// Create a lower-case version of the bot name for matching later
 	botUsernameLC = strings.ToLower(botUsername)

@@ -67,10 +67,10 @@ func generateResponse(username, text string, twitter bool) []byte {
 		log.Fatal(err)
 	}
 
-	if twitter && twitterClient != nil {
-		log.Printf("Tweeting: %s", response.Text)
-		twitterClient.Post(response.Text)
-	}
+	//if twitter && twitterClient != nil {
+	//	log.Printf("Tweeting: %s", response.Text)
+	//	twitterClient.Post(response.Text)
+	//}
 
 	time.Sleep(time.Duration(responseTimeout) * time.Second)
 	return b
