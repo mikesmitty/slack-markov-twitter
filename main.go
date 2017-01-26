@@ -28,10 +28,12 @@ var (
 	responseChance  int
 	responseTimeout int
 
-	twitterConsumerKey    string
-	twitterConsumerSecret string
-	//twitterAccessToken       string
-	//twitterAccessTokenSecret string
+	twitterTimeout           int
+	twitterSourceUser        string
+	twitterConsumerKey       string
+	twitterConsumerSecret    string
+	twitterAccessToken       string
+	twitterAccessTokenSecret string
 	//twitterClient            *Twitter
 
 	markovChain *Chain
@@ -60,13 +62,15 @@ func main() {
 	flag.StringVar(&botUsername, "botUsername", "markov-bot", "The name of the bot when it speaks")
 	flag.StringVar(&stateFile, "stateFile", "state", "File to use for maintaining our markov chain state")
 
+	flag.IntVar(&twitterTimeout, "twitterTimeout", 60, "Timeout between Twitter scrapes")
 	flag.StringVar(&twitterConsumerKey, "twitterConsumerKey", "", "Twitter API key")
 	flag.StringVar(&twitterConsumerSecret, "twitterConsumerSecret", "", "Twitter API key secret")
-	//flag.StringVar(&twitterAccessToken, "twitterAccessToken", "", "Twitter access token")
-	//flag.StringVar(&twitterAccessTokenSecret, "twitterAccessTokenSecret", "", "Twitter access token secret")
+	flag.StringVar(&twitterSourceUser, "twitterUser", "", "Twitter user to markov-ize tweets from")
+	flag.StringVar(&twitterAccessToken, "twitterAccessToken", "", "Twitter access token")
+	flag.StringVar(&twitterAccessTokenSecret, "twitterAccessTokenSecret", "", "Twitter access token secret")
 
-	var importDir = flag.String("importDir", "", "The directory of a Slack export")
-	var importChan = flag.String("importChan", "", "Optional channel to limit the import to")
+	//var importDir = flag.String("importDir", "", "The directory of a Slack export")
+	//var importChan = flag.String("importChan", "", "Optional channel to limit the import to")
 
 	flag.Parse()
 
@@ -77,36 +81,24 @@ func main() {
 
 	markovChain = NewChain(prefixLen) // Initialize a new Chain.
 
-	// Import into the chain
-	if *importDir != "" {
-		err := StartImport(importDir, importChan)
-		if err != nil {
-			log.Fatal(err)
-		}
+	// Rebuild the markov chain from state
+	err := markovChain.Load(stateFile)
+	if err != nil {
+		//log.Fatal(err)
+		log.Printf("Could not load from '%s'. This may be expected.", stateFile)
 	} else {
-		// Rebuild the markov chain from state
-		err := markovChain.Load(stateFile)
-		if err != nil {
-			//log.Fatal(err)
-			log.Printf("Could not load from '%s'. This may be expected.", stateFile)
-		} else {
-			log.Printf("Loaded previous state from '%s' (%d suffixes).", stateFile, len(markovChain.Chain))
-		}
+		log.Printf("Loaded previous state from '%s' (%d suffixes).", stateFile, len(markovChain.Chain))
 	}
 
-	// Optionally create the twitter bridge
-	//if twitterConsumerKey != "" && twitterConsumerSecret != "" && twitterAccessToken != "" && twitterAccessTokenSecret != "" {
-	//	twitterClient = NewTwitter(twitterConsumerKey, twitterConsumerSecret, twitterAccessToken, twitterAccessTokenSecret)
-
-	//	user, err := twitterClient.GetMe()
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-
-	//	log.Printf("Connected to Twitter as: %s", user.ScreenName)
-	//} else {
-	//	log.Printf("Not enabling twitter support")
-	//}
+	// Optionally start trolling twitter
+	if twitterConsumerKey != "" && twitterConsumerSecret != "" && twitterAccessToken != "" && twitterAccessTokenSecret != "" && twitterSourceUser != "" {
+		if twitterTimeout < 1 {
+			log.Printf("Can't have a timeout less than one minute. Setting to 60 minutes")
+			twitterTimeout = 60
+		}
+		aWhile := time.Duration(twitterTimeout) * time.Minute
+		go crawlTwitter(aWhile, twitterConsumerKey, twitterConsumerSecret, twitterAccessToken, twitterAccessTokenSecret, twitterSourceUser, markovChain.SinceID)
+	}
 
 	// Create a lower-case version of the bot name for matching later
 	botUsernameLC = strings.ToLower(botUsername)

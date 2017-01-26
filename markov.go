@@ -34,6 +34,7 @@ func (p Prefix) Shift(word string) {
 // A suffix is a single word. A prefix can have multiple suffixes.
 type Chain struct {
 	Chain     map[string][]string
+	SinceID   uint64
 	prefixLen int
 	mu        sync.Mutex
 }
